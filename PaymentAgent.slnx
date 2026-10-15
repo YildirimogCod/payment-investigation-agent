@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PaymentAgent.Agent/PaymentAgent.Agent.csproj" />
+    <Project Path="src/PaymentAgent.Console/PaymentAgent.Console.csproj" />
+    <Project Path="src/PaymentAgent.Data/PaymentAgent.Data.csproj" />
+    <Project Path="src/PaymentAgent.Domain/PaymentAgent.Domain.csproj" />
+    <Project Path="src/PaymentAgent.Tools/PaymentAgent.Tools.csproj" />
+  </Folder>
+</Solution>
