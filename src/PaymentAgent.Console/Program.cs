@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Anthropic;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using PaymentAgent.Data;
 using PaymentAgent.Domain;
 
@@ -6,6 +9,11 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
+        if (args.Length > 0 && args[0] == "hello")
+        {
+            await RunHelloAsync();
+            return;
+        }
         var options = new DbContextOptionsBuilder<PaymentDbContext>()
             .UseSqlite("Data Source = payments.db")
             .Options;
@@ -34,5 +42,22 @@ internal class Program
                 Console.WriteLine($"  {e.OccurredAt.ToLocalTime():HH:mm:ss}  {e.Status}  {e.ErrorCode}");
             }
         }
+    }
+    private static async Task RunHelloAsync()
+    {
+        var config = new ConfigurationBuilder()
+            .AddUserSecrets<Program>()
+            .Build();
+
+        var apiKey = config["Anthropic:ApiKey"]
+            ?? throw new InvalidOperationException("Anthropic:ApiKey bulunamadı. user-secrets ile ekle.");
+
+        AnthropicClient client = new() { ApiKey = apiKey };
+        IChatClient chatClient = client.AsIChatClient("claude-haiku-5-5");
+
+        var response = await chatClient.GetResponseAsync("Merhaba! Tek cümleyle kendini tanıt.");
+
+        Console.WriteLine(response.Text);
+        Console.WriteLine($"Token: giriş={response.Usage?.InputTokenCount}, çıkış={response.Usage?.OutputTokenCount}");
     }
 }
