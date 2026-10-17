@@ -42,6 +42,12 @@ internal class Program
                 Console.WriteLine($"  {e.OccurredAt.ToLocalTime():HH:mm:ss}  {e.Status}  {e.ErrorCode}");
             }
         }
+        var stats = await reader.GetStatsAsync(now.AddHours(-1));
+        Console.WriteLine($"Toplam: {stats.Total}, başarısız: {stats.Failed}");
+        foreach (var (code, count) in stats.FailedByErrorCode)
+        {
+            Console.WriteLine($"  {code}: {count}");
+        }
     }
     private static async Task RunHelloAsync()
     {
