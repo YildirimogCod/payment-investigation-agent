@@ -24,6 +24,27 @@ public class EfPaymentReader : IPaymentReader
            .FirstOrDefaultAsync(p => p.OrderId == orderId, cancellationToken);
     }
 
+    public async Task<PaymentStats> GetStatsAsync(DateTimeOffset since, CancellationToken cancellationToken = default)
+    {
+        var recent = _db.Payments
+            .AsNoTracking()
+            .Where(p => p.CreatedAt >= since);
+
+        var total = await recent.CountAsync(cancellationToken);
+        var failedIds = recent
+        .Where(p => p.Status == PaymentStatus.Failed)
+        .Select(p => p.Id);
+        var failed = await failedIds.CountAsync(cancellationToken);
+        var byCode = await _db.StatusEvents
+       .AsNoTracking()
+       .Where(e => e.Status == PaymentStatus.Failed && failedIds.Contains(e.PaymentId))
+       .GroupBy(e => e.ErrorCode ?? "UNKNOWN")
+       .Select(g => new { Code = g.Key, Count = g.Count() })
+       .ToListAsync(cancellationToken);
+
+        return new PaymentStats(total, failed, byCode.ToDictionary(x => x.Code, x => x.Count));
+    }
+
     public async Task<IReadOnlyList<PaymentStatusEvent>> GetStatusHistoryAsync(Guid paymentId, CancellationToken cancellationToken = default)
     {
         return await _db.StatusEvents
@@ -42,4 +63,5 @@ public class EfPaymentReader : IPaymentReader
             .Take(limit)
             .ToListAsync(cancellationToken);
     }
+
 }
